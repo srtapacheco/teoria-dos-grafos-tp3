@@ -1,0 +1,22 @@
+[
+{
+  "directory": "/home/karen/Transferências/grafos/tp2/build",
+  "command": "/usr/bin/gcc   -g -std=gnu11 -o CMakeFiles/untitled.dir/main.c.o -c /home/karen/Transferências/grafos/tp2/main.c",
+  "file": "/home/karen/Transferências/grafos/tp2/main.c"
+},
+{
+  "directory": "/home/karen/Transferências/grafos/tp2/build",
+  "command": "/usr/bin/gcc   -g -std=gnu11 -o CMakeFiles/untitled.dir/src/grafo_lista.c.o -c /home/karen/Transferências/grafos/tp2/src/grafo_lista.c",
+  "file": "/home/karen/Transferências/grafos/tp2/src/grafo_lista.c"
+},
+{
+  "directory": "/home/karen/Transferências/grafos/tp2/build",
+  "command": "/usr/bin/gcc   -g -std=gnu11 -o CMakeFiles/untitled.dir/src/grafo_matriz.c.o -c /home/karen/Transferências/grafos/tp2/src/grafo_matriz.c",
+  "file": "/home/karen/Transferências/grafos/tp2/src/grafo_matriz.c"
+},
+{
+  "directory": "/home/karen/Transferências/grafos/tp2/build",
+  "command": "/usr/bin/gcc   -g -std=gnu11 -o CMakeFiles/untitled.dir/src/grafo.c.o -c /home/karen/Transferências/grafos/tp2/src/grafo.c",
+  "file": "/home/karen/Transferências/grafos/tp2/src/grafo.c"
+}
+]

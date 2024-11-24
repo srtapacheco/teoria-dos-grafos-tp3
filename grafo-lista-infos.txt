@@ -1,0 +1,5 @@
+Número de arestas: 4
+Grau mínimo: 2
+Grau máximo: 2
+Grau médio: 2.00
+Mediana do grau: 2

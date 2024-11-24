@@ -1,0 +1,3 @@
+/home/karen/Transferências/grafos/tp2/build/CMakeFiles/untitled.dir
+/home/karen/Transferências/grafos/tp2/build/CMakeFiles/edit_cache.dir
+/home/karen/Transferências/grafos/tp2/build/CMakeFiles/rebuild_cache.dir
