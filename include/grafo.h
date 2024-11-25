@@ -4,6 +4,7 @@
 #include "grafo_matriz.h"
 #include "grafo_lista.h"
 #include <stdio.h>
+#include <float.h>
 
 typedef enum { MATRIZ_ADJACENCIA, LISTA_ADJACENCIA } TipoRepresentacao;
 
@@ -50,14 +51,13 @@ typedef struct {
     HeapNode **array;
 } MinHeap;
 
-
 // Funções principais do grafo
 Grafo *criarGrafo(int numVertices, TipoRepresentacao tipo, int direcionado);
 Grafo *criarGrafoVazio(int numVertices, TipoRepresentacao tipo);
 void liberarGrafo(Grafo *grafo);
 EstatisticasGrafo *calcularEstatisticasGrafo(Grafo *grafo);
 void lerArestas(Grafo *grafo, const char *nomeArquivo, int direcionado);
-void adicionarArestaGrafo(Grafo *grafo, int u, int v, double peso, int direcionado);
+void adicionarArestaGrafo(Grafo *grafo, int u, int v, double capacidade, int direcionado);
 
 // Funções auxiliares
 int compararInteiros(const void *p, const void *arg);
@@ -82,7 +82,7 @@ void bfsComFilaArvore(Grafo *grafo, int verticeInicial, int *visitados, Grafo *a
 int calcularDistancia(Grafo *grafo, int origem, int destino);
 void descobrirComponentes(Grafo *grafo, int *componentes, int *numComponentes);
 
-// trab2
+// Funções de Dijkstra
 int possuiPesosNegativos(Grafo *grafo);
 void dijkstraVetor(Grafo *grafo, int origem, int imprimir, double *distancia, int *pais);
 
@@ -99,5 +99,12 @@ void liberarMinHeap(MinHeap *minHeap);
 // Protótipo da função Dijkstra com Heap
 void dijkstraHeap(Grafo *grafo, int origem, int imprimir, double *distancia, int *pais);
 
+// Funções para o algoritmo de Ford-Fulkerson
+Grafo *criarGrafoResidual(Grafo *grafoOriginal);
+void adicionarArestaResidual(Grafo *grafo, int u, int v, double capacidade, int original);
+int encontrarCaminhoAumentante(Grafo *grafoResidual, int origem, int destino, int *pais);
+double calcularGargalo(Grafo *grafoResidual, int origem, int destino, int *pais);
+void atualizarFluxos(Grafo *grafoOriginal, Grafo *grafoResidual, int origem, int destino, int *pais, double gargalo);
+double fordFulkerson(Grafo *grafoOriginal, int origem, int destino);
 
 #endif // GRAFO_H

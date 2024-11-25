@@ -18,4 +18,7 @@ GrafoLista *criarGrafoLista(int numVertices);
 void liberarGrafoLista(GrafoLista *grafoLista);
 void adicionarArestaLista(GrafoLista *grafoLista, int u, int v, double capacidade, int direcionado);
 
+// Funções adicionais para o grafo residual
+void adicionarArestaListaResidual(GrafoLista *grafoLista, int u, int v, double capacidade, int original);
+
 #endif // GRAFO_LISTA_H

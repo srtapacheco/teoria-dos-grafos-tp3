@@ -44,3 +44,13 @@ void adicionarArestaLista(GrafoLista *grafoLista, int u, int v, double capacidad
         grafoLista->listaAdj[v] = novoNo;
     }
 }
+
+// Função para adicionar uma aresta no grafo residual
+void adicionarArestaListaResidual(GrafoLista *grafoLista, int u, int v, double capacidade, int original) {
+    No *novoNo = (No *)malloc(sizeof(No));
+    novoNo->vertice = v;
+    novoNo->capacidade = capacidade;
+    novoNo->fluxo = (double)original; // 1 para aresta original, 0 para reversa
+    novoNo->prox = grafoLista->listaAdj[u];
+    grafoLista->listaAdj[u] = novoNo;
+}

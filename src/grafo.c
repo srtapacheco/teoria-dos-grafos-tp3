@@ -38,7 +38,6 @@ Grafo *criarGrafoVazio(int numVertices, TipoRepresentacao tipo) {
     return grafo;
 }
 
-
 // Função para ler as arestas do arquivo e preencher o grafo
 void lerArestas(Grafo *grafo, const char *nomeArquivo, int direcionado) {
     FILE *arquivo = fopen(nomeArquivo, "r");
@@ -51,20 +50,18 @@ void lerArestas(Grafo *grafo, const char *nomeArquivo, int direcionado) {
     fscanf(arquivo, "%d", &numVertices); // Ignora o número de vértices, pois já foi lido
 
     int u, v;
-    double peso;
-    while (fscanf(arquivo, "%d %d %lf", &u, &v, &peso) == 3) {
+    double capacidade;
+    while (fscanf(arquivo, "%d %d %lf", &u, &v, &capacidade) == 3) {
         // Ajusta os índices para 0-based
         u -= 1;
         v -= 1;
 
         // Adiciona a aresta
-        adicionarArestaGrafo(grafo, u, v, peso, direcionado);
+        adicionarArestaGrafo(grafo, u, v, capacidade, direcionado);
     }
 
     fclose(arquivo);
 }
-
-
 
 void liberarGrafo(Grafo *grafo) {
     if (grafo->tipo == MATRIZ_ADJACENCIA) {
@@ -91,7 +88,9 @@ EstatisticasGrafo *calcularEstatisticasGrafo(Grafo *grafo) {
         int grau = 0;
         if (grafo->tipo == MATRIZ_ADJACENCIA) {
             for (int j = 0; j < grafo->numVertices; j++) {
-                grau += grafo->grafoMatriz->matriz[i][j];
+                if (grafo->grafoMatriz->capacidade[i][j] > 0) {
+                    grau++;
+                }
             }
         } else if (grafo->tipo == LISTA_ADJACENCIA) {
             No *atual = grafo->grafoLista->listaAdj[i];
@@ -121,8 +120,11 @@ EstatisticasGrafo *calcularEstatisticasGrafo(Grafo *grafo) {
         stats->medianaGrau = graus[grafo->numVertices / 2];
     }
 
-    // Dividir por 2 pois cada aresta foi contada duas vezes
-    stats->numArestas /= 2;
+    // Dividir por 2 se o grafo não for direcionado, pois cada aresta foi contada duas vezes
+    if (!grafo->direcionado) {
+        stats->numArestas /= 2;
+    }
+
     stats->numVertices = grafo->numVertices;
 
     // Limpar
@@ -187,16 +189,14 @@ void liberarPilha(Pilha *pilha) {
 }
 
 // Função para adicionar uma aresta ao grafo (usada para construir a árvore DFS)
-void adicionarArestaGrafo(Grafo *grafo, int u, int v, double peso, int direcionado) {
+void adicionarArestaGrafo(Grafo *grafo, int u, int v, double capacidade, int direcionado) {
     if (grafo->tipo == MATRIZ_ADJACENCIA) {
-        adicionarArestaMatriz(grafo->grafoMatriz, u, v, peso, direcionado);
+        adicionarArestaMatriz(grafo->grafoMatriz, u, v, capacidade, direcionado);
     } else if (grafo->tipo == LISTA_ADJACENCIA) {
-        adicionarArestaLista(grafo->grafoLista, u, v, peso, direcionado);
+        adicionarArestaLista(grafo->grafoLista, u, v, capacidade, direcionado);
     }
     grafo->numArestas++;
 }
-
-
 
 // Função principal para DFS com pilha que constrói a árvore DFS
 void dfsComPilhaArvore(Grafo *grafo, int verticeInicial, int *visitados,
@@ -219,12 +219,13 @@ void dfsComPilhaArvore(Grafo *grafo, int verticeInicial, int *visitados,
 
         // Adiciona aresta ao grafo árvore, se não for o vértice inicial e arvoreDFS não for NULL
         if (verticeAtual != verticeInicial && arvoreDFS != NULL) {
-            adicionarArestaGrafo(arvoreDFS, verticeAtual, pais[verticeAtual], 1.0, 0);        }
+            adicionarArestaGrafo(arvoreDFS, verticeAtual, pais[verticeAtual], 1.0, 0);
+        }
 
         // Explora os vértices adjacentes
         if (grafo->tipo == MATRIZ_ADJACENCIA) {
             for (int j = grafo->numVertices - 1; j >= 0; j--) {
-                if (grafo->grafoMatriz->matriz[verticeAtual][j] == 1 && !visitados[j]) {
+                if (grafo->grafoMatriz->capacidade[verticeAtual][j] > 0 && !visitados[j]) {
                     push(pilha, j);
                     visitados[j] = 1;
                     pais[j] = verticeAtual;
@@ -332,7 +333,7 @@ void bfsComFilaArvore(Grafo *grafo, int verticeInicial, int *visitados, Grafo *a
         // Explora os vértices adjacentes
         if (grafo->tipo == MATRIZ_ADJACENCIA) {
             for (int j = 0; j < grafo->numVertices; j++) {
-                if (grafo->grafoMatriz->matriz[verticeAtual][j] == 1 && !visitados[j]) {
+                if (grafo->grafoMatriz->capacidade[verticeAtual][j] > 0 && !visitados[j]) {
                     visitados[j] = 1;  // Marca como visitado
                     enqueue(fila, j);   // Enfileira o vértice adjacente
                     pais[j] = verticeAtual;
@@ -422,7 +423,7 @@ int calcularDistancia(Grafo *grafo, int origem, int destino) {
         // Explora os vértices adjacentes
         if (grafo->tipo == MATRIZ_ADJACENCIA) {
             for (int j = 0; j < grafo->numVertices; j++) {
-                if (grafo->grafoMatriz->matriz[verticeAtual][j] == 1 && !visitados[j]) {
+                if (grafo->grafoMatriz->capacidade[verticeAtual][j] > 0 && !visitados[j]) {
                     visitados[j] = 1;
                     distancias[j] = distancias[verticeAtual] + 1;
                     enqueue(fila, j);
@@ -487,8 +488,8 @@ void dijkstraVetor(Grafo *grafo, int origem, int imprimir, double *distancia, in
             // Atualizar as distâncias dos vértices adjacentes
             if (grafo->tipo == MATRIZ_ADJACENCIA) {
                 for (int v = 0; v < numVertices; v++) {
-                    if (grafo->grafoMatriz->matriz[u][v] > 0 && !visitados[v]) {
-                        double peso = grafo->grafoMatriz->matriz[u][v];
+                    if (grafo->grafoMatriz->capacidade[u][v] > 0 && !visitados[v]) {
+                        double peso = grafo->grafoMatriz->capacidade[u][v];
                         if (distancia[u] + peso < distancia[v]) {
                             distancia[v] = distancia[u] + peso;
                             pais[v] = u;
@@ -499,7 +500,7 @@ void dijkstraVetor(Grafo *grafo, int origem, int imprimir, double *distancia, in
                 No *adjacente = grafo->grafoLista->listaAdj[u];
                 while (adjacente != NULL) {
                     int v = adjacente->vertice;
-                    double peso = adjacente->peso;
+                    double peso = adjacente->capacidade;
                     if (!visitados[v] && distancia[u] + peso < distancia[v]) {
                         distancia[v] = distancia[u] + peso;
                         pais[v] = u;
@@ -541,6 +542,7 @@ void dijkstraVetor(Grafo *grafo, int origem, int imprimir, double *distancia, in
     free(visitados);
 }
 
+// Funções do MinHeap (usado no Dijkstra com heap)
 MinHeap* criarMinHeap(int capacidade) {
     MinHeap* minHeap = (MinHeap*) malloc(sizeof(MinHeap));
     minHeap->capacidade = capacidade;
@@ -644,6 +646,7 @@ void liberarMinHeap(MinHeap *minHeap) {
     free(minHeap);
 }
 
+// Função de Dijkstra utilizando heap
 void dijkstraHeap(Grafo *grafo, int origem, int imprimir, double *distancia, int *pais) {
     int numVertices = grafo->numVertices;
 
@@ -675,7 +678,7 @@ void dijkstraHeap(Grafo *grafo, int origem, int imprimir, double *distancia, int
         // Para cada vizinho de u
         if (grafo->tipo == MATRIZ_ADJACENCIA) {
             for (int v = 0; v < numVertices; v++) {
-                double peso = grafo->grafoMatriz->matriz[u][v];
+                double peso = grafo->grafoMatriz->capacidade[u][v];
                 if (peso > 0 && estaNoHeap(minHeap, v)) {
                     if (distancia[u] + peso < distancia[v]) {
                         distancia[v] = distancia[u] + peso;
@@ -688,7 +691,7 @@ void dijkstraHeap(Grafo *grafo, int origem, int imprimir, double *distancia, int
             No *adjacente = grafo->grafoLista->listaAdj[u];
             while (adjacente != NULL) {
                 int v = adjacente->vertice;
-                double peso = adjacente->peso;
+                double peso = adjacente->capacidade;
                 if (estaNoHeap(minHeap, v)) {
                     if (distancia[u] + peso < distancia[v]) {
                         distancia[v] = distancia[u] + peso;
@@ -730,4 +733,256 @@ void dijkstraHeap(Grafo *grafo, int origem, int imprimir, double *distancia, int
     }
 
     liberarMinHeap(minHeap);
+}
+
+// Funções para o algoritmo de Ford-Fulkerson
+
+// Função para adicionar arestas no grafo residual
+void adicionarArestaResidual(Grafo *grafo, int u, int v, double capacidade, int original) {
+    if (grafo->tipo == MATRIZ_ADJACENCIA) {
+        adicionarArestaMatrizResidual(grafo->grafoMatriz, u, v, capacidade, original);
+    } else if (grafo->tipo == LISTA_ADJACENCIA) {
+        adicionarArestaListaResidual(grafo->grafoLista, u, v, capacidade, original);
+    }
+    grafo->numArestas++;
+}
+
+// Função para criar o grafo residual a partir do grafo original
+Grafo *criarGrafoResidual(Grafo *grafoOriginal) {
+    Grafo *grafoResidual = criarGrafo(grafoOriginal->numVertices, grafoOriginal->tipo, grafoOriginal->direcionado);
+
+    if (grafoOriginal->tipo == LISTA_ADJACENCIA) {
+        for (int u = 0; u < grafoOriginal->numVertices; u++) {
+            No *atual = grafoOriginal->grafoLista->listaAdj[u];
+            while (atual != NULL) {
+                int v = atual->vertice;
+                double capacidade = atual->capacidade;
+                double fluxo = atual->fluxo;
+
+                double c_f = capacidade - fluxo; // Capacidade residual no sentido original
+                double c_r = fluxo; // Capacidade residual no sentido reverso
+
+                if (c_f > 0) {
+                    // Adiciona aresta (u, v) com capacidade c_f, fluxo = 1 (aresta original)
+                    adicionarArestaResidual(grafoResidual, u, v, c_f, 1);
+                }
+                if (c_r > 0) {
+                    // Adiciona aresta (v, u) com capacidade c_r, fluxo = 0 (aresta reversa)
+                    adicionarArestaResidual(grafoResidual, v, u, c_r, 0);
+                }
+                atual = atual->prox;
+            }
+        }
+    } else if (grafoOriginal->tipo == MATRIZ_ADJACENCIA) {
+        for (int u = 0; u < grafoOriginal->numVertices; u++) {
+            for (int v = 0; v < grafoOriginal->numVertices; v++) {
+                double capacidade = grafoOriginal->grafoMatriz->capacidade[u][v];
+                double fluxo = grafoOriginal->grafoMatriz->fluxo[u][v];
+
+                double c_f = capacidade - fluxo; // Capacidade residual no sentido original
+                double c_r = fluxo; // Capacidade residual no sentido reverso
+
+                if (c_f > 0) {
+                    // Adiciona aresta (u, v) com capacidade c_f, fluxo = 1 (aresta original)
+                    adicionarArestaResidual(grafoResidual, u, v, c_f, 1);
+                }
+                if (c_r > 0) {
+                    // Adiciona aresta (v, u) com capacidade c_r, fluxo = 0 (aresta reversa)
+                    adicionarArestaResidual(grafoResidual, v, u, c_r, 0);
+                }
+            }
+        }
+    }
+
+    return grafoResidual;
+}
+
+// Função para encontrar um caminho aumentante usando BFS
+int encontrarCaminhoAumentante(Grafo *grafoResidual, int origem, int destino, int *pais) {
+    int numVertices = grafoResidual->numVertices;
+    int *visitados = (int *)calloc(numVertices, sizeof(int));
+    Fila *fila = criarFila(numVertices);
+
+    for (int i = 0; i < numVertices; i++) {
+        visitados[i] = 0;
+        pais[i] = -1;
+    }
+
+    enqueue(fila, origem);
+    visitados[origem] = 1;
+
+    while (!estaVaziaFila(fila)) {
+        int u = dequeue(fila);
+
+        if (grafoResidual->tipo == LISTA_ADJACENCIA) {
+            No *atual = grafoResidual->grafoLista->listaAdj[u];
+            while (atual != NULL) {
+                int v = atual->vertice;
+                if (!visitados[v]) {
+                    visitados[v] = 1;
+                    pais[v] = u;
+                    enqueue(fila, v);
+
+                    if (v == destino) {
+                        liberarFila(fila);
+                        free(visitados);
+                        return 1; // Caminho encontrado
+                    }
+                }
+                atual = atual->prox;
+            }
+        } else if (grafoResidual->tipo == MATRIZ_ADJACENCIA) {
+            for (int v = 0; v < grafoResidual->numVertices; v++) {
+                if (grafoResidual->grafoMatriz->capacidade[u][v] > 0 && !visitados[v]) {
+                    visitados[v] = 1;
+                    pais[v] = u;
+                    enqueue(fila, v);
+
+                    if (v == destino) {
+                        liberarFila(fila);
+                        free(visitados);
+                        return 1; // Caminho encontrado
+                    }
+                }
+            }
+        }
+    }
+
+    liberarFila(fila);
+    free(visitados);
+    return 0; // Nenhum caminho encontrado
+}
+
+// Função para calcular o gargalo de um caminho
+double calcularGargalo(Grafo *grafoResidual, int origem, int destino, int *pais) {
+    double gargalo = DBL_MAX;
+    int v = destino;
+
+    while (v != origem) {
+        int u = pais[v];
+        double capacidade = 0.0;
+
+        if (grafoResidual->tipo == LISTA_ADJACENCIA) {
+            No *atual = grafoResidual->grafoLista->listaAdj[u];
+            while (atual != NULL) {
+                if (atual->vertice == v) {
+                    capacidade = atual->capacidade;
+                    break;
+                }
+                atual = atual->prox;
+            }
+        } else if (grafoResidual->tipo == MATRIZ_ADJACENCIA) {
+            capacidade = grafoResidual->grafoMatriz->capacidade[u][v];
+        }
+
+        if (capacidade < gargalo) {
+            gargalo = capacidade;
+        }
+
+        v = u;
+    }
+
+    return gargalo;
+}
+
+// Função para atualizar os fluxos no grafo original
+void atualizarFluxos(Grafo *grafoOriginal, Grafo *grafoResidual, int origem, int destino, int *pais, double gargalo) {
+    int v = destino;
+
+    while (v != origem) {
+        int u = pais[v];
+        int original = 0;
+
+        if (grafoResidual->tipo == LISTA_ADJACENCIA) {
+            No *atual = grafoResidual->grafoLista->listaAdj[u];
+            while (atual != NULL) {
+                if (atual->vertice == v) {
+                    original = (int)atual->fluxo;
+                    break;
+                }
+                atual = atual->prox;
+            }
+        } else if (grafoResidual->tipo == MATRIZ_ADJACENCIA) {
+            original = (int)grafoResidual->grafoMatriz->fluxo[u][v];
+        }
+
+        if (original == 1) {
+            // Aresta original: aumenta o fluxo
+            if (grafoOriginal->tipo == LISTA_ADJACENCIA) {
+                No *atual = grafoOriginal->grafoLista->listaAdj[u];
+                while (atual != NULL) {
+                    if (atual->vertice == v) {
+                        atual->fluxo += gargalo;
+                        break;
+                    }
+                    atual = atual->prox;
+                }
+            } else if (grafoOriginal->tipo == MATRIZ_ADJACENCIA) {
+                grafoOriginal->grafoMatriz->fluxo[u][v] += gargalo;
+            }
+        } else {
+            // Aresta reversa: diminui o fluxo
+            if (grafoOriginal->tipo == LISTA_ADJACENCIA) {
+                No *atual = grafoOriginal->grafoLista->listaAdj[v];
+                while (atual != NULL) {
+                    if (atual->vertice == u) {
+                        atual->fluxo -= gargalo;
+                        break;
+                    }
+                    atual = atual->prox;
+                }
+            } else if (grafoOriginal->tipo == MATRIZ_ADJACENCIA) {
+                grafoOriginal->grafoMatriz->fluxo[v][u] -= gargalo;
+            }
+        }
+
+        v = u;
+    }
+}
+
+// Função principal do algoritmo de Ford-Fulkerson
+double fordFulkerson(Grafo *grafoOriginal, int origem, int destino) {
+    double fluxoMaximo = 0.0;
+    int numVertices = grafoOriginal->numVertices;
+    int *pais = (int *)malloc(numVertices * sizeof(int));
+
+    // Inicializa o fluxo no grafo original
+    if (grafoOriginal->tipo == LISTA_ADJACENCIA) {
+        for (int u = 0; u < grafoOriginal->numVertices; u++) {
+            No *atual = grafoOriginal->grafoLista->listaAdj[u];
+            while (atual != NULL) {
+                atual->fluxo = 0.0;
+                atual = atual->prox;
+            }
+        }
+    } else if (grafoOriginal->tipo == MATRIZ_ADJACENCIA) {
+        for (int i = 0; i < grafoOriginal->numVertices; i++) {
+            for (int j = 0; j < grafoOriginal->numVertices; j++) {
+                grafoOriginal->grafoMatriz->fluxo[i][j] = 0.0;
+            }
+        }
+    }
+
+    while (1) {
+        Grafo *grafoResidual = criarGrafoResidual(grafoOriginal);
+
+        int caminhoEncontrado = encontrarCaminhoAumentante(grafoResidual, origem, destino, pais);
+
+        if (!caminhoEncontrado) {
+            liberarGrafo(grafoResidual);
+            break;
+        }
+
+        double gargalo = calcularGargalo(grafoResidual, origem, destino, pais);
+
+        atualizarFluxos(grafoOriginal, grafoResidual, origem, destino, pais, gargalo);
+
+        fluxoMaximo += gargalo;
+
+        liberarGrafo(grafoResidual);
+    }
+
+    free(pais);
+
+    return fluxoMaximo;
 }

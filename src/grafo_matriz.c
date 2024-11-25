@@ -40,3 +40,9 @@ void adicionarArestaMatriz(GrafoMatriz *grafoMatriz, int u, int v, double capaci
         grafoMatriz->fluxo[v][u] = 0.0;
     }
 }
+
+// Função para adicionar uma aresta no grafo residual
+void adicionarArestaMatrizResidual(GrafoMatriz *grafoMatriz, int u, int v, double capacidade, int original) {
+    grafoMatriz->capacidade[u][v] = capacidade;
+    grafoMatriz->fluxo[u][v] = (double)original; // 1 para aresta original, 0 para reversa
+}

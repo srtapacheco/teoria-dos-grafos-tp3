@@ -12,4 +12,7 @@ GrafoMatriz *criarGrafoMatriz(int numVertices);
 void liberarGrafoMatriz(GrafoMatriz *grafoMatriz);
 void adicionarArestaMatriz(GrafoMatriz *grafoMatriz, int u, int v, double capacidade, int direcionado);
 
+// Funções adicionais para o grafo residual
+void adicionarArestaMatrizResidual(GrafoMatriz *grafoMatriz, int u, int v, double capacidade, int original);
+
 #endif // GRAFO_MATRIZ_H
