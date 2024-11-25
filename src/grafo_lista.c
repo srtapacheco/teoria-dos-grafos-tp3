@@ -25,11 +25,12 @@ void liberarGrafoLista(GrafoLista *grafoLista) {
 }
 
 // Função para adicionar uma aresta na lista de adjacência
-void adicionarArestaLista(GrafoLista *grafoLista, int u, int v, double peso, int direcionado) {
+void adicionarArestaLista(GrafoLista *grafoLista, int u, int v, double capacidade, int direcionado) {
     // Adiciona a aresta u -> v
     No *novoNo = (No *)malloc(sizeof(No));
     novoNo->vertice = v;
-    novoNo->peso = peso;
+    novoNo->capacidade = capacidade;
+    novoNo->fluxo = 0.0; // Inicializa fluxo como 0
     novoNo->prox = grafoLista->listaAdj[u];
     grafoLista->listaAdj[u] = novoNo;
 
@@ -37,7 +38,8 @@ void adicionarArestaLista(GrafoLista *grafoLista, int u, int v, double peso, int
     if (!direcionado) {
         novoNo = (No *)malloc(sizeof(No));
         novoNo->vertice = u;
-        novoNo->peso = peso;
+        novoNo->capacidade = capacidade;
+        novoNo->fluxo = 0.0; // Inicializa fluxo como 0
         novoNo->prox = grafoLista->listaAdj[v];
         grafoLista->listaAdj[v] = novoNo;
     }

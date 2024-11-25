@@ -3,7 +3,8 @@
 
 typedef struct No {
     int vertice;
-    double peso;
+    double capacidade;
+    double fluxo;
     struct No *prox;
 } No;
 
@@ -15,6 +16,6 @@ typedef struct {
 // Funções para manipulação do grafo com lista de adjacência
 GrafoLista *criarGrafoLista(int numVertices);
 void liberarGrafoLista(GrafoLista *grafoLista);
-void adicionarArestaLista(GrafoLista *grafoLista, int u, int v, double peso, int direcionado);
+void adicionarArestaLista(GrafoLista *grafoLista, int u, int v, double capacidade, int direcionado);
 
 #endif // GRAFO_LISTA_H
